@@ -5,7 +5,7 @@ const cors = require("cors");
 const connectionDB = require("./Database/connection");
 
 
-const port = process.env.PORT || 3000; 
+const port = process.env.PORT || 3000;
 const app = express();
 
 
@@ -13,17 +13,18 @@ app.use(express.json());
 app.use(cors());
 
 
-app.get('/',(req,res)=>{
+app.get('/', (req, res) => {
     res.send("Our API");
 });
 
 app.use('/api/auth', require('./Routes/auth.route'));
+app.use('/api/private', require('./Routes/private.route'));
 
 
 
 connectionDB();
 
-app.listen(port, ()=>{
-    
-    console.log(`Server is listening on port ${port}`);
+app.listen(port, () => {
+
+    console.log(`Server is listening on port  http://localhost:${port}`);
 });
