@@ -10,6 +10,8 @@ const server = http.createServer((req, res) => {
 
 
 const wss = new WebSocketServer({ server });
+
+
 wss.on('connection', function connection(ws) {
     ws.on('error', console.error);
 
