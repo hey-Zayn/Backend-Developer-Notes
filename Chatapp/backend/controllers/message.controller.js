@@ -1,7 +1,7 @@
 const User = require('../models/user.model')
 const Message = require('../models/message.model')
 const cloudinary = require('../lib/cloudinary')
-
+const { io, getReceiverSocketId } = require('../lib/socket')
 
 // get Sidebar users ---- GET users
 
@@ -33,7 +33,7 @@ const GetUsers = async (req, res) => {
 const GetMessages = async (req, res) => {
     try {
         const { id: userToChatId } = req.params;
-        const myId = req.user_id;
+        const myId = req.user._id;
         const messages = await Message.find({
             $or: [
                 { sender: myId, receiver: userToChatId },
@@ -56,13 +56,13 @@ const GetMessages = async (req, res) => {
 
 const SendMessage = async (req, res) => {
     try {
+        const { text, image } = req.body;
         const { id: receiverId } = req.params;
-        const { message, media } = req.body;
-        const senderId = req.user_id;
+        const senderId = req.user._id;
 
         let imageUrl;
-        if (media) {
-            const result = await cloudinary.uploader.upload(media, {
+        if (image) {
+            const result = await cloudinary.uploader.upload(image, {
                 folder: "chatapp",
                 resource_type: "auto"
             })
@@ -72,12 +72,17 @@ const SendMessage = async (req, res) => {
         const newMessage = await Message.create({
             sender: senderId,
             receiver: receiverId,
-            message,
-            media: imageUrl
+            text,
+            image: imageUrl
         })
         await newMessage.save();
 
         // TODO : IMPLEMENT SOCKET IO TO SEND MESSAGES FOR REAL TIME CHAT...
+
+        const receiverSocketId = getReceiverSocketId(receiverId);
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("newMessage", newMessage);
+        }
 
         res.status(200).json({
             success: true,
@@ -85,6 +90,7 @@ const SendMessage = async (req, res) => {
             newMessage
         })
     } catch (error) {
+        console.log(error);
         res.status(500).json({
             success: false,
             message: "Internal Server Error",

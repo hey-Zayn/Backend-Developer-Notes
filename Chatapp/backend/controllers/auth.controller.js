@@ -113,6 +113,7 @@ const updateProfile = async (req, res) => {
 
 
     try {
+        console.log("updateProfile called with:", { fullName, userId });
         if (!profilePic) {
             return res.status(400).json({
                 success: false,
@@ -120,33 +121,38 @@ const updateProfile = async (req, res) => {
             })
         }
 
-        const uploadResponse = cloudinary.uploader.upload(profilePic, {
+        console.log("Uploading to cloudinary...");
+        const uploadResponse = await cloudinary.uploader.upload(profilePic, {
             folder: "profile_pics",
-            width: 250,
-            height: 250,
-            crop: "fill"
         })
-        const updatedUser = await User.findByIdAndUpdate(userId, {
-            fullName,
-            profilePic: uploadResponse.secure_url,
-        }, { new: true })
+        console.log("Cloudinary upload successful:", uploadResponse.secure_url);
+
+        const updateData = {};
+        if (fullName) updateData.fullName = fullName;
+        if (uploadResponse.secure_url) updateData.profilePic = uploadResponse.secure_url;
+
+        console.log("Updating user in database...");
+        const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true })
 
         if (!updatedUser) {
+            console.log("User not found for update:", userId);
             return res.status(400).json({
                 success: false,
                 message: "User Not Found"
             })
         }
+        console.log("User updated successfully:", updatedUser._id);
         res.status(200).json({
             success: true,
             message: "Profile Updated Successfully",
-            updatedUser
+            user: updatedUser
         })
     } catch (error) {
+        console.error("Error in updateProfile:", error);
         res.status(500).json({
             success: false,
             message: "Internal Server Error",
-            error: error
+            error: error.message || error
         })
     }
 }

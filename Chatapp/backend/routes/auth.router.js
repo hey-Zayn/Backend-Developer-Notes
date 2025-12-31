@@ -15,7 +15,7 @@ router.get('/private', protectedRoute, (req, res) => {
     })
 })
 
-router.post('/update-profile', protectedRoute, updateProfile)
+router.put('/update-profile', protectedRoute, updateProfile)
 router.get('/check-auth', protectedRoute, checkAuth)
 
 module.exports = router;

@@ -12,11 +12,10 @@ const messageSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true
     },
-    message: {
+    text: {
         type: String,
-        required: true
     },
-    media: {
+    image: {
         type: String,
     },
     isRead: {
